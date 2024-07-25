@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const { client, conectar } = require('./db');
 const { ObjectId } = require('mongodb');
-const bcrypt = require('bcryptjs');  // Cambiado a bcryptjs
+const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const multer = require('multer');
@@ -17,7 +17,7 @@ paypal.configure({
 });
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
@@ -42,7 +42,6 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// Ruta para subir archivos
 app.post('/api/upload', upload.single('file'), (req, res) => {
   try {
     if (!req.file) {
@@ -55,7 +54,6 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
   }
 });
 
-// Ruta para crear pago de PayPal
 app.post('/api/paypal/create-payment', (req, res) => {
   const { total, currency } = req.body;
 
@@ -71,7 +69,7 @@ app.post('/api/paypal/create-payment', (req, res) => {
     transactions: [{
       amount: {
         currency: 'USD',
-        total: (total / 20).toFixed(2) // Assuming 1 USD = 20 MXN
+        total: (total / 20).toFixed(2)
       },
       description: 'Compra en tu tienda'
     }]
@@ -86,7 +84,6 @@ app.post('/api/paypal/create-payment', (req, res) => {
   });
 });
 
-// Ruta para ejecutar pago de PayPal
 app.post('/api/paypal/execute-payment', (req, res) => {
   const { paymentID, payerID, total } = req.body;
 
@@ -95,7 +92,7 @@ app.post('/api/paypal/execute-payment', (req, res) => {
     transactions: [{
       amount: {
         currency: 'USD',
-        total: (total / 20).toFixed(2) // Assuming 1 USD = 20 MXN
+        total: (total / 20).toFixed(2)
       }
     }]
   };
@@ -109,7 +106,6 @@ app.post('/api/paypal/execute-payment', (req, res) => {
   });
 });
 
-// Ruta para guardar pedidos
 app.post('/api/pedidos', async (req, res) => {
   const { correo, cart, total, direccion } = req.body;
 
@@ -154,7 +150,6 @@ app.get('/api/pedidos', async (req, res) => {
   }
 });
 
-// Ruta para agregar productos
 app.post('/api/agregarProducto', async (req, res) => {
   const { Nombre, Precio, imagen } = req.body;
 
@@ -172,9 +167,8 @@ app.post('/api/agregarProducto', async (req, res) => {
     console.error('Error al agregar el producto:', error);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
-}); 
+});
 
-// Rutas para actualizar y eliminar productos
 app.put('/api/productos/:id', async (req, res) => {
   const productoId = req.params.id;
   const { Nombre, Precio, imagen } = req.body;
@@ -215,7 +209,6 @@ app.delete('/api/productos/:id', async (req, res) => {
   }
 });
 
-// Rutas existentes para la gestión de usuarios, productos y configuración administrativa
 app.post('/api/usuarios/enviarCodigoRecuperacion', async (req, res) => {
   const { correo } = req.body;
   const codigoRecuperacion = crypto.randomBytes(3).toString('hex').toUpperCase();
@@ -297,47 +290,6 @@ app.post('/api/usuarios/cambiarPassword', async (req, res) => {
     res.json({ message: 'Contraseña cambiada exitosamente' });
   } catch (error) {
     console.error('Error al cambiar la contraseña:', error);
-    res.status(500).json({ error: 'Error interno del servidor' });
-  }
-});
-
-app.get('/api/productos', async (req, res) => {
-  try {
-    const db = client.db();
-    const productos = await db.collection('Productos').find().toArray();
-    res.json(productos);
-  } catch (error) {
-    console.error('Error al obtener productos:', error);
-    res.status(500).json({ error: 'Error interno del servidor' });
-  }
-});
-
-app.get('/api/productos/:id', async (req, res) => {
-  const productoId = req.params.id;
-
-  try {
-    const db = client.db();
-    const producto = await db.collection('Productos').findOne({ _id: new ObjectId(productoId) });
-
-    if (!producto) {
-      return res.status(404).json({ error: 'Producto no encontrado' });
-    }
-
-    res.json(producto);
-  } catch (error) {
-    console.error('Error al obtener producto por ID:', error);
-    res.status(500).json({ error: 'Error interno del servidor' });
-  }
-});
-
-app.get('/api/preguntasSecretas', async (req, res) => {
-  try {
-    const db = client.db();
-    const preguntasSecretas = await db.collection('PreguntasSecretas').find().toArray();
-    const preguntas = preguntasSecretas.map(p => p.Pregunta);
-    res.json(preguntas);
-  } catch (error) {
-    console.error('Error al obtener preguntas secretas:', error);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
