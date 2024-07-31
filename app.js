@@ -2,12 +2,13 @@ const express = require('express');
 const cors = require('cors');
 const { client, conectar } = require('./db');
 const { ObjectId } = require('mongodb');
-const bcrypt = require('bcryptjs');  // Cambiado a bcryptjs
+const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const multer = require('multer');
 const path = require('path');
 const paypal = require('paypal-rest-sdk');
+const cloudinary = require('cloudinary').v2;
 require('dotenv').config();
 
 paypal.configure({
@@ -16,22 +17,20 @@ paypal.configure({
   client_secret: process.env.PAYPAL_CLIENT_SECRET
 });
 
+cloudinary.config({
+  cloud_name: 'dt6uyamcm',
+  api_key: '46261761766453',
+  api_secret: 'rCJThcGpHO-iiccbzZULzNUyhN0',
+  secure: true
+});
+
 const app = express();
-const port = process.env.PORT || 3000;  // Cambiado para usar el puerto de las variables de entorno
+const port = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const dir = path.join(__dirname, 'src', 'assets', 'images');
-    cb(null, dir);
-  },
-  filename: (req, file, cb) => {
-    cb(null, 'logo2.png');
-  }
-});
-
+const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 const transporter = nodemailer.createTransport({
@@ -42,13 +41,19 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// Ruta para subir archivos
+// Ruta para subir archivos a Cloudinary
 app.post('/api/upload', upload.single('file'), (req, res) => {
   try {
     if (!req.file) {
       throw new Error('No se recibió ningún archivo');
     }
-    res.json({ filePath: 'assets/images/logo2.png' });
+
+    cloudinary.uploader.upload_stream({ resource_type: 'image' }, (error, result) => {
+      if (error) {
+        return res.status(500).json({ error: 'Error al subir el archivo a Cloudinary', details: error.message });
+      }
+      res.json({ url: result.secure_url });
+    }).end(req.file.buffer);
   } catch (error) {
     console.error('Error al subir el archivo:', error.message);
     res.status(500).json({ error: 'Error al subir el archivo', details: error.message });
