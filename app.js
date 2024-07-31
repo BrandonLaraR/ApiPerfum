@@ -19,7 +19,7 @@ paypal.configure({
 
 cloudinary.config({
   cloud_name: 'dt6uyamcm',
-  api_key: '46261761766453',
+  api_key: '462617617766453',
   api_secret: 'rCJThcGpHO-iiccbzZULzNUyhN0',
   secure: true
 });
