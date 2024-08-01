@@ -1,3 +1,4 @@
+// app.js
 const express = require('express');
 const cors = require('cors');
 const { client, conectar } = require('./db');
@@ -57,6 +58,25 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
   } catch (error) {
     console.error('Error al subir el archivo:', error.message);
     res.status(500).json({ error: 'Error al subir el archivo', details: error.message });
+  }
+});
+
+// Nueva ruta para guardar URLs de imágenes
+app.post('/api/adminConfig/images', async (req, res) => {
+  const { images } = req.body;
+
+  try {
+    const db = client.db();
+    const result = await db.collection('Informacion').updateOne(
+      { Titulo: "Imágenes" },
+      { $set: { Contenido: images } },
+      { upsert: true }
+    );
+
+    res.json({ message: 'URLs de imágenes guardadas exitosamente', result });
+  } catch (error) {
+    console.error('Error al guardar URLs de imágenes:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
 
@@ -177,7 +197,7 @@ app.post('/api/agregarProducto', async (req, res) => {
     console.error('Error al agregar el producto:', error);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
-}); 
+});
 
 // Rutas para actualizar y eliminar productos
 app.put('/api/productos/:id', async (req, res) => {
