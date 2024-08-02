@@ -80,7 +80,22 @@ app.post('/api/adminConfig/images', async (req, res) => {
   }
 });
 
-// Nueva ruta para guardar la URL del logo
+// Ruta para obtener el logo
+app.get('/api/adminConfig/logo', async (req, res) => {
+  try {
+    const db = client.db();
+    const logo = await db.collection('Informacion').findOne({ Titulo: "Logo" });
+    if (!logo) {
+      return res.status(404).json({ error: 'Logo no encontrado' });
+    }
+    res.json(logo);
+  } catch (error) {
+    console.error('Error al obtener el logo:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// Nueva ruta para guardar el logo
 app.post('/api/adminConfig/logo', async (req, res) => {
   const { logo } = req.body;
 
@@ -92,9 +107,9 @@ app.post('/api/adminConfig/logo', async (req, res) => {
       { upsert: true }
     );
 
-    res.json({ message: 'URL del logo guardada exitosamente', result });
+    res.json({ message: 'Logo guardado exitosamente', result });
   } catch (error) {
-    console.error('Error al guardar URL del logo:', error);
+    console.error('Error al guardar el logo:', error);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
