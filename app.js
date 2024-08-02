@@ -80,6 +80,25 @@ app.post('/api/adminConfig/images', async (req, res) => {
   }
 });
 
+// Nueva ruta para guardar la URL del logo
+app.post('/api/adminConfig/logo', async (req, res) => {
+  const { logo } = req.body;
+
+  try {
+    const db = client.db();
+    const result = await db.collection('Informacion').updateOne(
+      { Titulo: "Logo" },
+      { $set: { Contenido: logo } },
+      { upsert: true }
+    );
+
+    res.json({ message: 'URL del logo guardada exitosamente', result });
+  } catch (error) {
+    console.error('Error al guardar URL del logo:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
 // Ruta para crear pago de PayPal
 app.post('/api/paypal/create-payment', (req, res) => {
   const { total, currency } = req.body;
