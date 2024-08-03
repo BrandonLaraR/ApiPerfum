@@ -389,6 +389,31 @@ app.get('/api/productos/:id', async (req, res) => {
   }
 });
 
+// Ruta para agregar una reseña a un producto
+app.post('/api/productos/:id/reviews', async (req, res) => {
+  const productoId = req.params.id;
+  const { nombre, rating, descripcion } = req.body;
+
+  try {
+    const db = client.db();
+    const review = { nombre, rating, descripcion, createdAt: new Date() };
+
+    const result = await db.collection('Productos').updateOne(
+      { _id: new ObjectId(productoId) },
+      { $push: { reviews: review } }
+    );
+
+    if (result.modifiedCount === 0) {
+      return res.status(404).json({ error: 'Producto no encontrado' });
+    }
+
+    res.json(review);
+  } catch (error) {
+    console.error('Error al agregar la reseña:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
 app.get('/api/preguntasSecretas', async (req, res) => {
   try {
     const db = client.db();
