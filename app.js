@@ -133,6 +133,40 @@ app.post('/api/adminConfig/logo', async (req, res) => {
   }
 });
 
+// Nueva ruta para obtener los colores
+app.get('/api/adminConfig/colors', async (req, res) => {
+  try {
+    const db = client.db();
+    const colors = await db.collection('Informacion').findOne({ Titulo: "Colores" });
+    if (!colors) {
+      return res.status(404).json({ error: 'Colores no encontrados' });
+    }
+    res.json(colors);
+  } catch (error) {
+    console.error('Error al obtener los colores:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// Nueva ruta para guardar los colores
+app.post('/api/adminConfig/colors', async (req, res) => {
+  const { primary, header } = req.body;
+
+  try {
+    const db = client.db();
+    const result = await db.collection('Informacion').updateOne(
+      { Titulo: "Colores" },
+      { $set: { Contenido: { primary, header } } },
+      { upsert: true }
+    );
+
+    res.json({ message: 'Colores guardados exitosamente', result });
+  } catch (error) {
+    console.error('Error al guardar los colores:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
 // Ruta para crear pago de PayPal
 app.post('/api/paypal/create-payment', (req, res) => {
   const { total, currency } = req.body;
@@ -927,53 +961,6 @@ app.post('/api/adminConfig', async (req, res) => {
     res.json({ message: 'Configuración actualizada exitosamente', updates });
   } catch (error) {
     console.error('Error al actualizar configuración:', error);
-    res.status(500).json({ error: 'Error interno del servidor' });
-  }
-});
-
-// Rutas para manejar los colores del encabezado y del pie de página
-app.get('/api/adminConfig/colors', async (req, res) => {
-  try {
-    const db = client.db();
-    const config = await db.collection('Informacion').findOne({ Titulo: 'Colores' });
-    if (!config) {
-      return res.json({ header: '#000000', footer: '#110d03' }); // Valores predeterminados si no existen en la base de datos
-    }
-    res.json(config.Contenido);
-  } catch (error) {
-    console.error('Error al obtener los colores:', error);
-    res.status(500).json({ error: 'Error interno del servidor' });
-  }
-});
-
-app.post('/api/adminConfig/colors/header', async (req, res) => {
-  const { color } = req.body;
-  try {
-    const db = client.db();
-    const result = await db.collection('Informacion').updateOne(
-      { Titulo: 'Colores' },
-      { $set: { 'Contenido.header': color } },
-      { upsert: true }
-    );
-    res.json({ message: 'Color del encabezado actualizado exitosamente' });
-  } catch (error) {
-    console.error('Error al actualizar el color del encabezado:', error);
-    res.status(500).json({ error: 'Error interno del servidor' });
-  }
-});
-
-app.post('/api/adminConfig/colors/footer', async (req, res) => {
-  const { color } = req.body;
-  try {
-    const db = client.db();
-    const result = await db.collection('Informacion').updateOne(
-      { Titulo: 'Colores' },
-      { $set: { 'Contenido.footer': color } },
-      { upsert: true }
-    );
-    res.json({ message: 'Color del pie de página actualizado exitosamente' });
-  } catch (error) {
-    console.error('Error al actualizar el color del pie de página:', error);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
