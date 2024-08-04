@@ -133,22 +133,22 @@ app.post('/api/adminConfig/logo', async (req, res) => {
   }
 });
 
-// Nueva ruta para obtener los colores
+// Ruta para obtener los colores
 app.get('/api/adminConfig/colors', async (req, res) => {
   try {
     const db = client.db();
-    const colors = await db.collection('Informacion').findOne({ Titulo: "Colores" });
-    if (!colors) {
+    const colores = await db.collection('Informacion').findOne({ Titulo: "Colores" });
+    if (!colores) {
       return res.status(404).json({ error: 'Colores no encontrados' });
     }
-    res.json(colors);
+    res.json(colores);
   } catch (error) {
     console.error('Error al obtener los colores:', error);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
 
-// Nueva ruta para guardar los colores
+// Ruta para guardar los colores
 app.post('/api/adminConfig/colors', async (req, res) => {
   const { primary, header } = req.body;
 
@@ -166,6 +166,7 @@ app.post('/api/adminConfig/colors', async (req, res) => {
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
+
 
 // Ruta para crear pago de PayPal
 app.post('/api/paypal/create-payment', (req, res) => {
