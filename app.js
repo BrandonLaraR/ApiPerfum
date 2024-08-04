@@ -198,6 +198,7 @@ app.post('/api/pedidos', async (req, res) => {
       cart,
       total,
       direccion,
+      completado: false, // Nuevo campo para indicar si el pedido está completado
       createdAt: new Date()
     };
 
@@ -228,6 +229,28 @@ app.get('/api/pedidos', async (req, res) => {
     res.json(pedidos);
   } catch (error) {
     console.error('Error al obtener pedidos:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// Ruta para marcar un pedido como completado
+app.put('/api/pedidos/completar/:id', async (req, res) => {
+  const pedidoId = req.params.id;
+
+  try {
+    const db = client.db();
+    const result = await db.collection('Pedidos').updateOne(
+      { _id: new ObjectId(pedidoId) },
+      { $set: { completado: true } }
+    );
+
+    if (result.modifiedCount === 0) {
+      return res.status(404).json({ error: 'Pedido no encontrado' });
+    }
+
+    res.json({ message: 'Pedido completado exitosamente' });
+  } catch (error) {
+    console.error('Error al completar el pedido:', error);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
