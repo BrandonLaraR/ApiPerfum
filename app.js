@@ -390,13 +390,26 @@ app.get('/api/productos/:id', async (req, res) => {
 });
 
 // Ruta para agregar una reseña a un producto
-app.post('/api/productos/:id/reviews', async (req, res) => {
+app.post('/api/productos/:id/reviews', upload.single('image'), async (req, res) => {
   const productoId = req.params.id;
   const { nombre, rating, descripcion } = req.body;
 
   try {
     const db = client.db();
-    const review = { nombre, rating, descripcion, createdAt: new Date() };
+    let imageUrl = '';
+
+    if (req.file) {
+      const result = await new Promise((resolve, reject) => {
+        cloudinary.uploader.upload_stream({ resource_type: 'image' }, (error, result) => {
+          if (error) return reject(error);
+          resolve(result);
+        }).end(req.file.buffer);
+      });
+
+      imageUrl = result.secure_url;
+    }
+
+    const review = { nombre, rating, descripcion, imageUrl, createdAt: new Date() };
 
     const result = await db.collection('Productos').updateOne(
       { _id: new ObjectId(productoId) },
@@ -413,6 +426,7 @@ app.post('/api/productos/:id/reviews', async (req, res) => {
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
+
 
 app.get('/api/preguntasSecretas', async (req, res) => {
   try {
