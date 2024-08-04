@@ -1,4 +1,3 @@
-// app.js
 const express = require('express');
 const cors = require('cors');
 const { client, conectar } = require('./db');
@@ -40,6 +39,26 @@ const transporter = nodemailer.createTransport({
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
+});
+
+// Ruta para enviar correos
+app.post('/api/send-email', (req, res) => {
+  const { to, subject, text } = req.body;
+
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to,
+    subject,
+    text
+  };
+
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.error('Error al enviar el correo:', error);
+      return res.status(500).json({ error: 'Error al enviar el correo' });
+    }
+    res.json({ message: 'Correo enviado exitosamente' });
+  });
 });
 
 // Ruta para subir archivos a Cloudinary
@@ -426,7 +445,6 @@ app.post('/api/productos/:id/reviews', upload.single('image'), async (req, res) 
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
-
 
 app.get('/api/preguntasSecretas', async (req, res) => {
   try {
